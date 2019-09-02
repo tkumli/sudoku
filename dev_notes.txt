@@ -1,0 +1,29 @@
+Todo:
+
+1) 
+ - property value shorthand 
+ - object destructing assignement
+Ilyesmit kellene a Board.selection kapcsán is alkalmazni
+
+2) ---   highlight vagy ui alert mechanismus
+ - game vagy board szinten?   - board-ra sztem kellene egy
+   pl. dudál vagy felvillan
+   triggerelhető, animált, független (el kell csak indítani s lefut külön szálon)
+
+3) ---   navigáció
+  - config-ból: vagy "elakad a szélen" vagy "beúszik a másik oldalon" típusú navigáció
+  - ha elakad, akkor az hozzon fel egy ui alert-et...
+
+4) ---   navigáció, ui
+  - modifier-ek értelmezése... ez nagy fejtörés. De a caps ne okozzon user:jumps-ot...
+  [ DONE ]
+
+4/a ---  board jelezze vhogy a capslock állapotát
+
+5) ---   mixins
+  - pl. javascript.info oldalon: mixns - mi ez?
+
+6) --- fabric.js wiki
+  - hasznos lenne feldolgozni: https://github.com/fabricjs/fabric.js/wiki
+
+7) --- build puzzle - numpad zero to fix a field
