@@ -9,14 +9,15 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
 
         // history
         this.history = [];
-        this.history.pos = 0;
-        this.history.last = 0;
+        this.history.pos = -1;
+        this.history.last = -1;
 
         // ui
         this.canvas = opts.canvas;
         this.ui = null;
         this.buildUI();
         this.buildBoard();
+        this.saveStateToHistory();
     },
 
     /////////////////////////////////////
@@ -66,12 +67,16 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
         console.log(this.activeTilePos);
     },
 
-    userTypesValue: function(Num) {
-        if (this.activeTile) { this.activeTile.setValue(Num); }
+    userTypesValue: function(num) {
+        if (this.activeTile) {
+            this.activeTile.setValue(num);
+            this.saveStateToHistory();
+            this.activeTile.ranges.forEach( range => range.clearNoteOnTiles(num));
+        }
     },
 
-    userTypesNote: function(Num) {
-        if (this.activeTile) { this.activeTile.toggleNote(Num); }
+    userTypesNote: function(num) {
+        if (this.activeTile) { this.activeTile.toggleNote(num); }
     },
 
     userCleares: function() {
@@ -92,12 +97,12 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
         for (key in this.tiles) {
             tiles[key] = this.tiles[key].saveState();
         }
+        this.history.pos++;
+        this.history.last = this.history.pos;
         this.history[this.history.pos] = {
             activeTile: this.activeTile,
             tiles: tiles 
         };
-        this.history.pos++;
-        this.history.last = this.history.pos;
     },
 
     restoreStateUndo: function() {
@@ -118,12 +123,12 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
             this.alert();
             return;
         }
+        this.history.pos++;
         let item = this.history[this.history.pos];
         this.activeTile = item.activeTile;
         for (key in this.tiles) {
             this.tiles[key].restoreState(item.tiles[key]);
         }
-        this.history.pos++;
     },
 
 
@@ -194,7 +199,7 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
 
         // reset decorations (model) on all ranges and tiles
         this.ranges.forEach( range => { range.highlightOff(); });
-        for (let key in this.tiles) { this.tiles[key].sameValueHighLightOff(); }
+        for (let key in this.tiles) { this.tiles[key].decorationOff(); }
 
         // decorate based on active tile
         if (this.activeTile) {
@@ -214,6 +219,19 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
                     }
                 }
             }
+
+            // 3) strong indication for conflicting tiles
+            let value = this.activeTile.value;
+            if (value) {
+                let sameValueTiles = new Set();
+                this.activeTile.ranges.forEach( range => {
+                    range.tiles.filter( tile => tile.value == value).forEach( tile => sameValueTiles.add(tile) );
+                });
+                if (sameValueTiles.size > 1) {
+                    for (tile of sameValueTiles.values()) { tile.valueConflict = true; }
+                }
+            }
+
         }
 
         // update ui elements

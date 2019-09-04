@@ -5,6 +5,10 @@ tam.Range = fabric.util.createClass({
         this.highlighted = false;
     },
 
+    clearNoteOnTiles: function(note) {
+        this.tiles.forEach( tile => tile.clearNote(note) );
+    },
+
     setType: function(type) {
         this.type = type;
     },
@@ -16,16 +20,10 @@ tam.Range = fabric.util.createClass({
 
     highlightOn: function() {
         this.highlighted = true;
-        this.render();
     },
 
     highlightOff: function() {
         this.highlighted = false;
-        this.render();
-    },
-
-    render: function() {
-        for (let key in this.tiles) { this.tiles[key].render(); }
     }
 
 });

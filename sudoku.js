@@ -29,10 +29,6 @@ tam.Game = fabric.util.createClass(fabric.Observable, {
 
     onKeyboardEvent: function(event) {
 
-        if (event.name != 'user:undo' && event.name != 'user:redo') { 
-            this.board.saveStateToHistory();
-        }
-
         switch (event.name) {
             case 'user:moves':
                 this.board.userMoves(event.dir);
@@ -68,9 +64,16 @@ tam.Game = fabric.util.createClass(fabric.Observable, {
         
         // update ui elements
         this.board.render();
-        
+
         // render it to the canves
         this.canvas.renderAll();
+
+        // save state to history
+        if (event.name != 'user:undo' && event.name != 'user:redo') { 
+            this.board.saveStateToHistory();
+        }
+
+
     },
     
 });
