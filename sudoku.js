@@ -60,6 +60,11 @@ tam.Game = fabric.util.createClass(fabric.Observable, {
                 this.board.userRequestsHighlight();
                 break;
         };
+        
+        // update ui elements
+        this.board.render();
+        
+        // render it to the canves
         this.canvas.renderAll();
     },
     

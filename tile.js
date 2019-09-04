@@ -1,78 +1,55 @@
-tam.Tile = fabric.util.createClass(fabric.Observable, {
+tam.Tile = fabric.util.createClass({
     initialize: function(opts) {
+        // model
         this.board = opts.board;
-        this.ranges = [];
         this.r = opts.r;
         this.c = opts.c;
+        this.ranges = [];
         this.fixed = false;
-        this.active = false;
+        this.sameValueHighlight = false;
         this.value = null;
         this.notes = new Set();
-        // ui
+        // view
         this.ui = null;
         this.buildUI();
     },
 
-    /////////////////////////////////////
-    // user interactions
-    userClears: function() {
-        this.value = null;
-        this.notes.clear();
-        this.render();
-    },
-
-    userSetsValue: function(value) {
-        this.value = value;
-        this.notes.clear();
-        this.render();
-        this.trigger('user:setsValue', {target:this});
-    },
-
-    userTogglesNote: function(note) {
-        this.value = null;
-        var nts = this.notes;
-        nts.has(note) ? nts.delete(note) : nts.add(note);
-        this.render();
-        this.trigger('user:togglesNote', {target:this})
-    },
-
-    userActivates: function() {
-        this.active = true;
-        this.highlightRangesOn();
-    },
-
-    userDeactivates: function() {
-        this.active = false;
-        this.highlightRangesOff();
-    },
-
-    userTogglesFix: function() {
-        this.fixed = !this.fixed;
-        this.render();
-    },
-
-    /////////////////////////////////////
-    // todo
+    // altering model
     addRange: function(range) {
         this.ranges.push(range);
     },
 
-    highlightRangesOn: function() {
-        this.ranges.forEach( range => range.highlightOn() );
+    toggleFix: function() { this.fixed = !this.fixed; },
+
+    clear:  function() {
+        this.value = null;
+        this.notes.clear();
     },
-    highlightRangesOff: function() {
-        this.ranges.forEach( range => range.highlightOff() );
+
+    setValue: function(value) {
+        this.value = value;
+        this.notes.clear();
+    },
+
+    toggleNote: function(note) {
+        this.value = null;
+        var nts = this.notes;
+        nts.has(note) ? nts.delete(note) : nts.add(note);
+    },
+
+    // decoration
+    sameValueHighLightOn() { this.sameValueHighlight = true; },
+    sameValueHighLightOff() { this.sameValueHighlight = false; },
+
+    highlightRanges: function() {
+        this.ranges.forEach( range => range.highlightOn() );
     },
 
     /////////////////////////////////////
     // UI related
     buildUI: function() {
         
-        // var ui = new fabric.Group([], {
-        //     left: 50 + this.c * 30,
-        //     top: 50 + this.r * 30
-        // });
-        
+        var canvas = this.board.canvas;
         var tileUiEls = [];
 
         // tile rectangle
@@ -81,7 +58,7 @@ tam.Tile = fabric.util.createClass(fabric.Observable, {
             height: 90,
             fill: '#bca'
         });
-        this.board.add(tileRec);
+        canvas.add(tileRec);
         tileUiEls.push(tileRec);
         
         // value
@@ -92,7 +69,7 @@ tam.Tile = fabric.util.createClass(fabric.Observable, {
             fill: '#337',
             fontFamily: 'Comic Sans'
         });
-        this.board.add(valueText);
+        canvas.add(valueText);
         tileUiEls.push(valueText);
 
         // notes
@@ -107,7 +84,7 @@ tam.Tile = fabric.util.createClass(fabric.Observable, {
                     fill: '#235',
                     visible: false
                 });
-                this.board.add(t);
+                canvas.add(t);
                 tileUiEls.push(t);
                 noteTexts[num] = t;
             }
@@ -117,7 +94,7 @@ tam.Tile = fabric.util.createClass(fabric.Observable, {
         var tileUi = new fabric.Group(tileUiEls);
         tileUi.left = tileUi.left + 5 + (this.c - 1) * 91 + ~~((this.c - 1) / 3) * 3;
         tileUi.top = tileUi.top + 5 + (this.r - 1) * 91 + ~~((this.r - 1) / 3) * 3;
-        this.board.add(tileUi);
+        canvas.add(tileUi);
 
         this.ui = {
             uiGroup: tileUi,
@@ -129,8 +106,9 @@ tam.Tile = fabric.util.createClass(fabric.Observable, {
 
     props: function() {
         props = [];
+        if (this.board.activeTile == this) { props.push('active'); }
         if (this.fixed) { props.push('fixed'); }
-        if (this.active) { props.push('active'); }
+        if (this.sameValueHighlight) { props.push('svhl'); }
         if (this.ranges.some(range => range.highlighted)) { props.push('highlighted'); }
         return props.join("-");
     },
@@ -147,9 +125,9 @@ tam.Tile = fabric.util.createClass(fabric.Observable, {
             ui.notes[num].set('visible', this.notes.has(num));
         }
 
-        
         // value fill color:
         let valFillColor = tam.utils.propmatch(this.props(), [
+            ["svhl", "#AA0"],
             ["fixed", "#000"],
             ["", "#337"]
         ]);
@@ -164,16 +142,7 @@ tam.Tile = fabric.util.createClass(fabric.Observable, {
             ["", "#bca"]
         ]);
         ui.tile.set('fill', tileFillColor);
-        
-        /*
-        // fixed: value color changed
-        ui.value.set('fill', this.fixed ? '#000' : '#337');
 
-        // active: tile fill color changed
-        ui.tile.set('fill', this.active ? '#efd' : '#bca');
-        */
-
-        //this.board.renderAll();
     }
 
 });

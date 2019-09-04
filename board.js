@@ -3,11 +3,11 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
         this.tiles = null;
         this.ranges = [];
         this.activeTile = null;
+        this.activeTilePos = null;
+        this.sameValueRangeHL = false;
 
         // ui
         this.canvas = opts.canvas;
-        this.prevSelection = null;
-        this.selection = null;
         this.ui = null;
         this.buildUI();
         this.buildBoard();
@@ -16,39 +16,36 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
     /////////////////////////////////////
     // user interactions
     userMoves: function(dir) {
-        if (this.selection == null) {
-            this.selection = {r: 1, c: 1};
+
+        if (this.activeTile) {
+            let {r,c} = this.activeTilePos;
+
+            var dirMap = {
+                left:  (r, c) => ([r, c-1]),
+                right: (r, c) => ([r, c+1]),
+                up:    (r, c) => ([r-1, c]),
+                down:  (r, c) => ([r+1, c]),
+            };
+            [r,c] = dirMap[dir](r, c);
+
+            if (r == 0) { r = 1; this.alert() }
+            if (r == 10) { r = 9; this.alert() }
+            if (c == 0) { c = 1; this.alert() }
+            if (c == 10) { c = 9; this.alert() }
+
+            this.activeTilePos = {r: r, c: c};
+            this.activeTile = this.tiles['r' + r + 'c' + c];
+
+        } else {
+            this.activeTilePos = {r: 1, c: 1};
             this.activeTile = this.tiles['r1c1'];
-            this.render();
-            return;
         }
-
-        var [r,c] = [this.selection.r, this.selection.c];
-        this.prevSelection = {r: r, c: c};
-
-        var dirMap = {
-            left:  (r, c) => ([r, c-1]),
-            right: (r, c) => ([r, c+1]),
-            up:    (r, c) => ([r-1, c]),
-            down:  (r, c) => ([r+1, c]),
-        };
-
-        [r,c] = dirMap[dir](r, c);
-        if (r == 0) { r = 1; this.alert() }
-        if (r == 10) { r = 9; this.alert() }
-        if (c == 0) { c = 1; this.alert() }
-        if (c == 10) { c = 9; this.alert() }
-
-        this.selection = {r: r, c: c}
-        this.activeTile = this.tiles['r'+r+'c'+c];
-        this.render();
     },
 
     userJumps: function(whereto) {
-        this.selection = this.selection || {r: 1, c: 1};
+        this.activeTilePos = this.activeTilePos || {r: 1, c: 1};
 
-        var [r,c] = [this.selection.r, this.selection.c];
-        this.prevSelection = {r: r, c: c};
+        var {r,c} = this.activeTilePos;
 
         var wheretoMap = {
             left:   (r, c) => ([r, 1]),
@@ -56,35 +53,31 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
             top:    (r, c) => ([1, c]),
             bottom: (r, c) => ([9, c]),
         };
-
         [r,c] = wheretoMap[whereto](r, c);
-        this.selection = {r: r, c: c};
+
+        this.activeTilePos = {r: r, c: c};
         this.activeTile = this.tiles['r'+r+'c'+c];
-        this.render();
+        console.log(this.activeTilePos);
     },
 
     userTypesValue: function(Num) {
-        if (!this.activeTile) { return; }
-        this.activeTile.userSetsValue(Num);
+        if (this.activeTile) { this.activeTile.setValue(Num); }
     },
 
     userTypesNote: function(Num) {
-        if (!this.activeTile) { return; }
-        this.activeTile.userTogglesNote(Num);
+        if (this.activeTile) { this.activeTile.toggleNote(Num); }
     },
 
     userCleares: function() {
-        if (!this.activeTile) { return; }
-        this.activeTile.userClears();
+        if (this.activeTile) { this.activeTile.clear(); }
     },
 
     userTogglesFix: function () {
-        if (!this.activeTile) { return; }
-        this.activeTile.userTogglesFix();
+        if (this.activeTile) { this.activeTile.toggleFix(); }
     },
 
     userRequestsHighlight: function() {
-        this.activeTile.highlightRanges();
+        this.sameValueRangeHL = !this.sameValueRangeHL;
     },
 
     buildUI: function() {
@@ -112,7 +105,7 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
         for (let r=1; r<=9; r++) {
             for (let c=1; c<=9; c++) {
                 tile = new tam.Tile({
-                    board: this.canvas,
+                    board: this,
                     r: r,
                     c: c
                 });
@@ -152,15 +145,29 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
     render: function() {
         var r,c;
 
-        if (this.prevSelection) {
-            [r,c] = [this.prevSelection.r, this.prevSelection.c];
-            this.tiles['r'+r+'c'+c].userDeactivates();
+        // reset decorations (model) on all ranges and tiles
+        this.ranges.forEach( range => { range.highlightOff(); });
+        for (let key in this.tiles) { this.tiles[key].sameValueHighLightOff(); }
+
+        // decorate
+        // 1) highlight active tile's ranges
+        this.activeTile.highlightRanges();
+        // 2) highlight tiles with the same value
+        if (this.activeTile.value) {
+            for (let key in this.tiles) {
+                if (this.tiles[key] == this.activeTile) { continue; }
+                if (this.tiles[key].value == this.activeTile.value) {
+                    this.tiles[key].sameValueHighLightOn();
+                    if (this.sameValueRangeHL) {
+                        this.tiles[key].highlightRanges();
+                    }
+                }
+            }
         }
 
-        if (this.selection) {
-            [r,c] = [this.selection.r, this.selection.c];
-            this.tiles['r'+r+'c'+c].userActivates();
-        }
+        // update ui elements
+        for (let key in this.tiles) { this.tiles[key].render(); }
+
     },
 
     alert: function() {
