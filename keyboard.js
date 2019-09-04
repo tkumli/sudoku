@@ -33,10 +33,13 @@ tam.Keyboard = fabric.util.createClass(fabric.Observable, {
             "Backspace": ['user:cleares', {}],
             "Delete": ['user:cleares', {}],
             "PageUp": ['user:undo', {}],
+            "KeyK": ['user:undo', {}],
             "PageDown": ['user:redo', {}],
+            "KeyL": ['user:redo', {}],
             "shift-Delete": ['user:restarts', {}],
             "Space": ['user:cleares', {}],
             "Numpad0": ['user:togglesFix', {}],
+            "Enter": ['user:togglesFix', {}],
             "ControlLeft": ['user:control', {}]
         };
         for (let k = 1; k <= 9; k++) {

@@ -1,23 +1,27 @@
 tam.Tile = fabric.util.createClass({
     initialize: function(opts) {
-        // model
+        // model - constant part - set at creation
         this.board = opts.board;
         this.r = opts.r;
         this.c = opts.c;
         this.ranges = [];
+
+        // model - variable part - mutated during game play
+        //         shall be part of history
         this.fixed = false;
-        this.sameValueHighlight = false;
         this.value = null;
         this.notes = new Set();
+
+        // model - presentation part - mutated according to presentation prefs
+        this.sameValueHighlight = false;
+
         // view
         this.ui = null;
         this.buildUI();
     },
 
     // altering model
-    addRange: function(range) {
-        this.ranges.push(range);
-    },
+    addRange: function(range) { this.ranges.push(range); },
 
     toggleFix: function() { this.fixed = !this.fixed; },
 
@@ -35,6 +39,22 @@ tam.Tile = fabric.util.createClass({
         this.value = null;
         var nts = this.notes;
         nts.has(note) ? nts.delete(note) : nts.add(note);
+    },
+
+    saveState: function() {
+        let state = {
+            value: this.value,
+            notes: Array.from(this.notes.values()),
+            fixed: this.fixed
+        };
+        return state;
+    },
+
+    restoreState: function(savedState) {
+        let {value, notes, fixed} = savedState;
+        this.value = value;
+        this.notes = new Set(notes);
+        this.fixed = fixed;
     },
 
     // decoration

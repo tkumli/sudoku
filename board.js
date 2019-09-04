@@ -1,10 +1,16 @@
 tam.Board = fabric.util.createClass(fabric.Observable, {
     initialize: function(opts) {
+        // basic state
         this.tiles = null;
         this.ranges = [];
         this.activeTile = null;
         this.activeTilePos = null;
         this.sameValueRangeHL = false;
+
+        // history
+        this.history = [];
+        this.history.pos = 0;
+        this.history.last = 0;
 
         // ui
         this.canvas = opts.canvas;
@@ -80,6 +86,47 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
         this.sameValueRangeHL = !this.sameValueRangeHL;
     },
 
+    // history handling
+    saveStateToHistory: function() {
+        let tiles = {};
+        for (key in this.tiles) {
+            tiles[key] = this.tiles[key].saveState();
+        }
+        this.history[this.history.pos] = {
+            activeTile: this.activeTile,
+            tiles: tiles 
+        };
+        this.history.pos++;
+        this.history.last = this.history.pos;
+    },
+
+    restoreStateUndo: function() {
+        if (this.history.pos == 0) {
+            this.alert();
+            return;
+        }
+        this.history.pos--;
+        let item = this.history[this.history.pos];
+        this.activeTile = item.activeTile;
+        for (key in this.tiles) {
+            this.tiles[key].restoreState(item.tiles[key]);
+        }
+    },
+
+    restoreStateRedo: function() {
+        if (this.history.pos == this.history.last) {
+            this.alert();
+            return;
+        }
+        let item = this.history[this.history.pos];
+        this.activeTile = item.activeTile;
+        for (key in this.tiles) {
+            this.tiles[key].restoreState(item.tiles[key]);
+        }
+        this.history.pos++;
+    },
+
+
     buildUI: function() {
         var canvas = this.canvas;
 
@@ -149,17 +196,21 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
         this.ranges.forEach( range => { range.highlightOff(); });
         for (let key in this.tiles) { this.tiles[key].sameValueHighLightOff(); }
 
-        // decorate
-        // 1) highlight active tile's ranges
-        this.activeTile.highlightRanges();
-        // 2) highlight tiles with the same value
-        if (this.activeTile.value) {
-            for (let key in this.tiles) {
-                if (this.tiles[key] == this.activeTile) { continue; }
-                if (this.tiles[key].value == this.activeTile.value) {
-                    this.tiles[key].sameValueHighLightOn();
-                    if (this.sameValueRangeHL) {
-                        this.tiles[key].highlightRanges();
+        // decorate based on active tile
+        if (this.activeTile) {
+
+            // 1) highlight active tile's ranges
+            this.activeTile.highlightRanges();
+
+            // 2) highlight tiles with the same value
+            if (this.activeTile.value) {
+                for (let key in this.tiles) {
+                    if (this.tiles[key] == this.activeTile) { continue; }
+                    if (this.tiles[key].value == this.activeTile.value) {
+                        this.tiles[key].sameValueHighLightOn();
+                        if (this.sameValueRangeHL) {
+                            this.tiles[key].highlightRanges();
+                        }
                     }
                 }
             }
