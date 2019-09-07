@@ -40,7 +40,10 @@ tam.Keyboard = fabric.util.createClass(fabric.Observable, {
             "Space": ['user:cleares', {}],
             "Numpad0": ['user:togglesFix', {}],
             "Enter": ['user:togglesFix', {}],
-            "ControlLeft": ['user:control', {}]
+            "ControlLeft": ['user:control', {}],
+            "shift-KeyG": ['user:play', {}],
+            "KeyF": ['user:fillnotes', {}],
+            "shift-KeyF": ['user:refillnotes', {}],
         };
         for (let k = 1; k <= 9; k++) {
             keyMap["Digit" + k] = ['user:typesValue', {num: k}];

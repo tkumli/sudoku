@@ -15,6 +15,7 @@ tam.Tile = fabric.util.createClass({
         // model - presentation part - mutated according to presentation prefs
         this.sameValueHighlight = false;
         this.valueConflict = false;
+        this.playHighlight = false;
 
         // view
         this.ui = null;
@@ -25,6 +26,8 @@ tam.Tile = fabric.util.createClass({
     addRange: function(range) { this.ranges.push(range); },
 
     toggleFix: function() { this.fixed = !this.fixed; },
+    fixOn: function() { this.fixed = true; },
+    fixOff: function() { this.fixed = false; },
 
     clear:  function() {
         this.value = null;
@@ -66,10 +69,12 @@ tam.Tile = fabric.util.createClass({
     decorationOff() {
         this.sameValueHighlight = false;
         this.valueConflict = false;
+        this.playHighlight = false;
     },
 
     sameValueHighLightOn() { this.sameValueHighlight = true; },
     valueConflictOn() { this.valueConflict = true; },
+    playHighlightOn() { this.playHighlight = true; },
 
     highlightRanges: function() {
         this.ranges.forEach( range => range.highlightOn() );
@@ -140,6 +145,7 @@ tam.Tile = fabric.util.createClass({
         if (this.fixed) { props.push('fixed'); }
         if (this.sameValueHighlight) { props.push('svhl'); }
         if (this.valueConflict) { props.push('conflict'); }
+        if (this.playHighlight) { props.push('play'); }
         if (this.ranges.some(range => range.highlighted)) { props.push('highlighted'); }
         return props.join("-");
     },
@@ -166,6 +172,7 @@ tam.Tile = fabric.util.createClass({
 
         // tile fill color
         let tileFillColor = tam.utils.propmatch(this.props(), [
+            ["play", "#0F0"],
             ["conflict", "#e41"],
             ["active-fixed", "#eee"],
             ["fixed", "#ccc"],

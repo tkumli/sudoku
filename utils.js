@@ -1,6 +1,51 @@
 // helpers
 var split = (str, sep) => str == "" ? [] : str.split(sep);
 
+// extending Set
+Set.prototype.addMany= function(elements) {
+    elements.forEach(el => this.add(el));
+    return this;
+}
+
+Set.prototype.deleteMany = function(elements) {
+    elements.forEach(el => this.delete(el));
+    return this;
+}
+
+Set.prototype.filter = function(pred) {
+    return new Set( Array.from(this.values()).filter(pred) );
+}
+
+Set.prototype.reduce = function(fun, init) {  // needed?
+    return Array.from(this.values()).reduce(fun, init);
+}
+
+Set.complementer = function(universe, setA) {
+    return (new Set(universe)).deleteMany(setA);
+}
+
+Set.union = function(sets) {
+    if (arguments.length > 1) { sets = Array.from(arguments) }
+    let union = new Set();
+    sets.forEach( set => union.addMany(set) );
+    return union;
+}
+
+// extending Array
+Array.prototype.subset = function*(n, b=0) {
+    for (let i = b; i <= this.length-n; i++) {
+        switch (n) {
+            case 1: 
+                yield [this[i]];
+                break;
+            default:
+                for ( sub of this.subset(n-1, i+1) ) {
+                    yield [this[i]].concat(sub);
+                }
+        }
+    }
+}
+
 tam.utils = {
     /*
      subject: string - properties joined with hyphen, e.g. "big-fat"

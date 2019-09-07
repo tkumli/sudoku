@@ -20,6 +20,43 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
         this.saveStateToHistory();
     },
 
+    load: function(puzzle) {
+        let i = 0;
+        for (k in this.tiles) {
+            let tile = this.tiles[k];
+            let value = parseInt(puzzle[i]);
+            if (value == 0) {
+                tile.clear();
+                tile.fixOff();
+            } else {
+                tile.setValue(value);
+                tile.fixOn();
+            }
+            i++;
+        }
+    },
+
+    // not nice ...
+    play: function() {
+        if (!this.ideg) { this.ideg = this.ranges[20].tiles.subset(6); }
+        let {value, done}  = this.ideg.next();
+        if (done) {
+            this.ideg = null;
+            return;
+        }
+        value.forEach( function(tile) { tile.playHighlightOn()} );
+    },
+
+
+    fillNotes: function() {
+        for (let k in this.tiles) {
+            let tile = this.tiles[k];
+            if ( (tile.value == null) && (tile.notes.size == 0) ) {
+                tile.notes = new Set([1,2,3,4,5,6,7,8,9]);
+            }
+        }
+    },
+
     /////////////////////////////////////
     // user interactions
     userMoves: function(dir) {
@@ -194,12 +231,13 @@ tam.Board = fabric.util.createClass(fabric.Observable, {
 
     },
 
-    render: function() {
-        var r,c;
-
+    resetDecoration: function() {
         // reset decorations (model) on all ranges and tiles
         this.ranges.forEach( range => { range.highlightOff(); });
         for (let key in this.tiles) { this.tiles[key].decorationOff(); }
+    },
+
+    render: function() {
 
         // decorate based on active tile
         if (this.activeTile) {

@@ -21,13 +21,18 @@ tam.Game = fabric.util.createClass(fabric.Observable, {
 
         // handling keyboard events
         var keyboard = new tam.Keyboard();
-        var userEvents = ['moves', 'jumps', 'typesValue', 'typesNote', 'cleares',
-                          'togglesFix', 'restarts', 'undo', 'redo', 'control'];
+        var userEvents = [
+            'moves', 'jumps', 'typesValue', 'typesNote', 'cleares',
+            'togglesFix', 'restarts', 'undo', 'redo', 'control', 'play',
+            'fillnotes', 'refillnotes'
+        ];
         var keyboardHandler = this.onKeyboardEvent.bind(this);
         userEvents.map( (name) => keyboard.on('user:'+name, keyboardHandler), this );
     },
 
     onKeyboardEvent: function(event) {
+        // update ui elements
+        this.board.resetDecoration();
 
         switch (event.name) {
             case 'user:moves':
@@ -59,6 +64,15 @@ tam.Game = fabric.util.createClass(fabric.Observable, {
                 break;
             case 'user:control':
                 this.board.userRequestsHighlight();
+                break;
+            case 'user:play':
+                this.board.play();
+                break;
+            case 'user:fillnotes':
+                this.board.fillNotes();
+                break;
+            case 'user:refillnotes':
+                this.board.fillNotes();
                 break;
         };
         
